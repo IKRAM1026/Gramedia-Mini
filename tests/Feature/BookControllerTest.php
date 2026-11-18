@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Exports\BooksExport;
 use App\Models\Book;
 use App\Models\BookCategory;
+use App\Models\SubscriptionPackage;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -17,6 +18,27 @@ use Tests\TestCase;
 class BookControllerTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_book_detail_displays_attached_subscription_packages(): void
+    {
+        $category = BookCategory::create(['name' => 'Novel']);
+        $book = $this->createBook($category, 'covers/senja.jpg');
+        $package = SubscriptionPackage::create([
+            'nama_package' => 'Paket Bulanan',
+            'description' => 'Akses buku pilihan',
+            'price' => 50000,
+            'color' => '#2563eb',
+        ]);
+        $book->subscriptionPackages()->attach($package);
+
+        $this->get(route('books.show', $book))
+            ->assertOk()
+            ->assertSee('Senja')
+            ->assertSee('Paket Bulanan')
+            ->assertSee('Rp 50.000')
+            ->assertSee('Informasi Buku')
+            ->assertSee('Baca Selengkapnya');
+    }
 
     public function test_admin_can_create_book_with_an_uploaded_cover(): void
     {

@@ -28,6 +28,11 @@ class Book extends Model
         return $this->hasMany(SubscriptionPackageBook::class);
     }
 
+    public function subscriptionPackageBooks(): HasMany
+    {
+        return $this->hasMany(SubscriptionPackageBook::class);
+    }
+
     public function subscriptionPackages(): BelongsToMany
     {
         return $this->belongsToMany(SubscriptionPackage::class, 'subscription_package_books');

@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/kategori-buku/{bookCategory}', [HomeController::class, 'category'])->name('books.category');
+Route::get('/buku/{book}', [BookController::class, 'show'])->name('books.show');
 Route::get('/paket-langganan/{subscriptionPackage}', [HomeController::class, 'subscriptionPackage'])->name('subscription-packages.show');
 
 // kelompok route yang gaboleh di akses kalau uda login
@@ -61,7 +62,7 @@ Route::middleware(['IsAdmin'])->group(function () {
         Route::get('/subscription-packages/{subscriptionPackage}/books/add', [SubscriptionPackageController::class, 'addBooks'])->name('subscription-packages.books.add');
         Route::post('/subscription-packages/{subscriptionPackage}/books', [SubscriptionPackageController::class, 'attachBooks'])->name('subscription-packages.books.attach');
         Route::get('/books/export', [BookController::class, 'export'])->name('books.export');
-        Route::resource('books', BookController::class);
+        Route::resource('books', BookController::class)->except(['show']);
 
     });
 

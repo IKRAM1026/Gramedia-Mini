@@ -180,7 +180,7 @@
                 <div class="book-scroll">
                     <div class="book-track">
                         @forelse ($latestBooks as $book)
-                            <a href="{{ route('books.checkout.page', $book) }}" class="text-decoration-none">
+                            <a href="{{ route('books.show', $book) }}" class="text-decoration-none">
                                 <article class="book-card">
                                     <img src="{{ asset($book->cover) }}" alt="{{ $book->title }}">
                                     <div class="card-body">

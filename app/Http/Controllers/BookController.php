@@ -21,44 +21,45 @@ class BookController extends Controller
             $model = Book::with('bookCategory');
 
             return DataTables::eloquent($model)
-            ->addIndexColumn()
-            ->addColumn('coverImg', function ($data) {
-                // memanggil file di pblic dengan asset()
-                return '
-                    <img src="' . asset($data->cover) . '" width="100" class="d-block mx-auto">';
-            })
-            ->editColumn('price', function ($data) {
-                return 'Rp ' . number_format($data->price, 0, ',', '.');
-            })
-            ->addColumn('category_name', function($data) {
-                // mengambil nama kategori dari relasi book_category_id
-                return $data->bookCategory ? $data->bookCategory->name : '';
-            })
-            ->addColumn('action', function($data) {
-                $btnDetail = '
+                ->addIndexColumn()
+                ->addColumn('coverImg', function ($data) {
+                    // memanggil file di pblic dengan asset()
+                    return '
+                    <img src="'.asset($data->cover).'" width="100" class="d-block mx-auto">';
+                })
+                ->editColumn('price', function ($data) {
+                    return 'Rp '.number_format($data->price, 0, ',', '.');
+                })
+                ->addColumn('category_name', function ($data) {
+                    // mengambil nama kategori dari relasi book_category_id
+                    return $data->bookCategory ? $data->bookCategory->name : '';
+                })
+                ->addColumn('action', function ($data) {
+                    $btnDetail = '
                     <button type="button" class="btn btn-sm btn-info" id="btn-detail"
-                    data-cover="' . asset($data->cover) . '"
-                    data-title="' . htmlspecialchars($data->title, ENT_QUOTES, 'UTF-8') . '"
-                    data-category="' . htmlspecialchars($data->bookCategory->name ?? '-', ENT_QUOTES, 'UTF-8') . '"
-                    data-price="Rp ' . number_format($data->price, 0, ',', '.') . '"
-                    data-writer="' . htmlspecialchars($data->writer, ENT_QUOTES, 'UTF-8') . '"
-                    data-publisher="' . htmlspecialchars($data->publisher, ENT_QUOTES, 'UTF-8') . '"
-                    data-language="' . htmlspecialchars($data->language, ENT_QUOTES, 'UTF-8') . '"
-                    data-release="' . date('d M Y', strtotime($data->release_date)) . '"
-                    data-pages="' . $data->page_of_book . '"
-                    data-description="' . htmlspecialchars($data->description ?? '', ENT_QUOTES, 'UTF-8') . '"   > 
+                    data-cover="'.asset($data->cover).'"
+                    data-title="'.htmlspecialchars($data->title, ENT_QUOTES, 'UTF-8').'"
+                    data-category="'.htmlspecialchars($data->bookCategory->name ?? '-', ENT_QUOTES, 'UTF-8').'"
+                    data-price="Rp '.number_format($data->price, 0, ',', '.').'"
+                    data-writer="'.htmlspecialchars($data->writer, ENT_QUOTES, 'UTF-8').'"
+                    data-publisher="'.htmlspecialchars($data->publisher, ENT_QUOTES, 'UTF-8').'"
+                    data-language="'.htmlspecialchars($data->language, ENT_QUOTES, 'UTF-8').'"
+                    data-release="'.date('d M Y', strtotime($data->release_date)).'"
+                    data-pages="'.$data->page_of_book.'"
+                    data-description="'.htmlspecialchars($data->description ?? '', ENT_QUOTES, 'UTF-8').'"   > 
                         Detail </button>
                     ';
                     $btnEdit = '<a href="'.route('admin.books.edit', $data->id).'" class="btn btn-sm btn-warning">Edit</a>';
                     $btnDelete = '<form method="POST" action="'.route('admin.books.destroy', $data->id).'">'.
                     csrf_field().method_field('DELETE').'<button type="submit" class="btn btn-sm btn-danger">Hapus</button>'.'</form>';
 
-                    return '<div class="d-flex gap-2">'. $btnDetail . $btnEdit. $btnDelete. '</div>';
+                    return '<div class="d-flex gap-2">'.$btnDetail.$btnEdit.$btnDelete.'</div>';
                 })
                 ->rawColumns(['coverImg', 'action'])
                 ->toJson();
 
         }
+
         return view('admin.books.index');
     }
 
@@ -68,6 +69,7 @@ class BookController extends Controller
     public function create()
     {
         $bookCategory = BookCategory::all();
+
         return view('admin.books.create', compact('bookCategory'));
     }
 
@@ -88,21 +90,22 @@ class BookController extends Controller
             'language' => ['required'],
             // exist (memastikan data id ada di table book_categories)
             'book_category_id' => ['required', 'exists:book_categories,id'],
-            'description' => ['nullable'] //boleh kosong
+            'description' => ['nullable'], // boleh kosong
         ]);
 
         if ($request->file('cover')) {
             $cover = $request->file('cover');      // ambil file gambar
             // rename nama gambar
-            $name = time() . "-" . $cover->getClientOriginalName();
+            $name = time().'-'.$cover->getClientOriginalName();
             // simpan gambar ke folder storage/app/public
             // putFileAs('nama_fplder', 'filenya', 'nama_file')
             Storage::disk('public')->putFileAs('covers', $cover, $name);
             // simpan alamat penyimpanan gambar ke data validasi di atas untuk dikirim ke db
-            $validateData['cover'] = Storage::url('covers/' . $name);
+            $validateData['cover'] = Storage::url('covers/'.$name);
         }
         // simpan ke data ke database
         Book::create($validateData);
+
         return redirect()->route('admin.books.index')->with('success', 'Berhasil membuat data Buku!');
     }
 
@@ -111,7 +114,9 @@ class BookController extends Controller
      */
     public function show(Book $book)
     {
-        //
+        $book->load('subscriptionPackageBooks.subscriptionPackage');
+
+        return view('user.books.show', compact('book'));
     }
 
     /**
@@ -120,6 +125,7 @@ class BookController extends Controller
     public function edit(Book $book)
     {
         $bookCategory = BookCategory::all();
+
         return view('admin.books.edit', compact('book', 'bookCategory'));
     }
 
@@ -140,31 +146,31 @@ class BookController extends Controller
             'language' => ['required'],
             // exist (memastikan data id ada di table book_categories)
             'book_category_id' => ['required', 'exists:book_categories,id'],
-            'description' => ['nullable'] //boleh kosong
+            'description' => ['nullable'], // boleh kosong
         ]);
 
         // Handle file upload jika ada gambar sampul baru yang diunggah
-        if($request->hasFile('cover')) {
+        if ($request->hasFile('cover')) {
             // 1 hapus cover lama dari storage  jika ada
             if ($book->cover) {
                 // ambil nama file asli dari URL (contoh: "/storage/covers/123_file.jpg" -> "covers/123_file.jpg")
                 $oldCoverPath = str_replace('/storage/', '', $book->cover);
 
-                if(Storage::disk('public')->exists($oldCoverPath)) {
+                if (Storage::disk('public')->exists($oldCoverPath)) {
                     Storage::disk('public')->delete($oldCoverPath);
                 }
             }
 
             // 2 simpan cover baru
             $coverImage = $request->file('cover');
-            $coverImageName = time() . '_' . $coverImage->getClientOriginalName();
+            $coverImageName = time().'_'.$coverImage->getClientOriginalName();
 
             Storage::disk('public')->putFileAs('covers', $coverImage, $coverImageName);
 
             // 3 set path URL cover baru  ke array data yang divalidasi
-            $validateData['cover'] = Storage::url('covers/', $coverImageName) ;
+            $validateData['cover'] = Storage::url('covers/', $coverImageName);
         }
-        
+
         // Update data buku
         $book->update($validateData);
 
