@@ -4,7 +4,10 @@
     <div class="container mt-5">
         <div class="d-flex justify-content-between">
             <h1>Buku</h1>
-            <a href="{{ route('admin.books.create') }}" class="btn btn-success">Tambah Data</a>
+            <div class="d-flex gap-2">
+                <a href="{{ route('admin.books.export') }}" class="btn btn-success">Export Excel</a>
+                <a href="{{ route('admin.books.create') }}" class="btn btn-primary">Tambah Data</a>
+            </div>
         </div>
         <div class="table table-bordered mt-5">
             <table class="table table-bordered" id="data-buku">

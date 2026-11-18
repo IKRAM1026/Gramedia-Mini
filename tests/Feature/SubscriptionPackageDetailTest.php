@@ -2,11 +2,16 @@
 
 namespace Tests\Feature;
 
+use App\Exports\SubscriptionPackagesExport;
 use App\Models\Book;
 use App\Models\BookCategory;
 use App\Models\SubscriptionPackage;
+use App\Models\SubscriptionPackageUser;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use Tests\TestCase;
 
 class SubscriptionPackageDetailTest extends TestCase
@@ -135,6 +140,55 @@ class SubscriptionPackageDetailTest extends TestCase
             [$firstBook->id, $secondBook->id],
             $package->books()->orderBy('books.id')->pluck('books.id')->all(),
         );
+    }
+
+    public function test_admin_can_download_subscription_package_book_and_active_customer_counts(): void
+    {
+        $this->travelTo('2026-11-17 09:00:00');
+        $package = SubscriptionPackage::create([
+            'nama_package' => 'Premium',
+            'description' => 'Paket premium',
+            'price' => 150000,
+            'color' => '#2563eb',
+        ]);
+        $firstBook = $this->createBook('Buku Satu', 'Penulis Satu');
+        $secondBook = $this->createBook('Buku Dua', 'Penulis Dua');
+        $package->books()->attach([$firstBook->id, $secondBook->id]);
+        $activeUser = User::factory()->create();
+        $expiredUser = User::factory()->create();
+        SubscriptionPackageUser::create([
+            'subscription_package_id' => $package->id,
+            'user_id' => $activeUser->id,
+            'expired_date' => '2026-11-17',
+        ]);
+        SubscriptionPackageUser::create([
+            'subscription_package_id' => $package->id,
+            'user_id' => $expiredUser->id,
+            'expired_date' => '2026-11-16',
+        ]);
+        $admin = User::factory()->create();
+        $admin->forceFill(['role' => 'admin'])->save();
+        Excel::fake();
+
+        $response = $this->actingAs($admin)
+            ->get(route('admin.subscription-packages.export'));
+
+        $response->assertOk();
+        Excel::assertDownloaded('subscription_packages.xlsx', function (SubscriptionPackagesExport $export): bool {
+            $package = $export->collection()->first();
+            $styles = $export->styles(new Worksheet);
+
+            return $export->headings() === [
+                'Nomor',
+                'Nama Paket Langganan',
+                'Harga',
+                'Jumlah Buku',
+                'Pelanggan Aktif',
+            ]
+                    && $export->map($package) === [1, 'Premium', 'Rp 150.000', 2, 1]
+                    && ($styles[1]['font']['bold'] ?? false)
+                    && $styles['A1:E2']['borders']['allBorders']['borderStyle'] === Border::BORDER_THIN;
+        });
     }
 
     public function test_attached_books_are_not_shown_in_the_add_book_selection(): void

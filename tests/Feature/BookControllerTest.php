@@ -2,12 +2,16 @@
 
 namespace Tests\Feature;
 
+use App\Exports\BooksExport;
 use App\Models\Book;
 use App\Models\BookCategory;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use Tests\TestCase;
 
 class BookControllerTest extends TestCase
@@ -92,6 +96,68 @@ class BookControllerTest extends TestCase
         $this->assertNotSame('/storage/covers/senja-lama.jpg', $book->cover);
         Storage::disk('public')->assertExists(substr($book->cover, strlen('/storage/')));
         Storage::disk('public')->assertMissing('covers/senja-lama.jpg');
+    }
+
+    public function test_admin_can_download_books_with_the_required_excel_data(): void
+    {
+        $category = BookCategory::create(['name' => 'Sci-Fi']);
+        $book = $this->createBook($category, 'covers/bintang.jpg');
+        $book->update([
+            'title' => 'Bintang',
+            'writer' => 'Tere Liye',
+            'publisher' => 'Gramedia',
+            'price' => 99000,
+            'release_date' => '2024-09-27',
+            'page_of_book' => 380,
+            'language' => 'Indonesia',
+        ]);
+        Excel::fake();
+
+        $response = $this->actingAs($this->adminUser())
+            ->get(route('admin.books.export'));
+
+        $response->assertOk();
+        Excel::assertDownloaded('books.xlsx', function (BooksExport $export) use ($category): bool {
+            $book = $export->collection()->first();
+            $styles = $export->styles(new Worksheet);
+
+            return $export->headings() === [
+                'Nomor',
+                'Alamat Gambar Sampul Buku',
+                'Nama Kategori Buku',
+                'Judul Buku',
+                'Penulis',
+                'Penerbit',
+                'Tanggal Rilis',
+                'Jumlah Halaman',
+                'Bahasa',
+                'Harga',
+            ] && $export->map($book) === [
+                1,
+                asset('/storage/covers/bintang.jpg'),
+                $category->name,
+                'Bintang',
+                'Tere Liye',
+                'Gramedia',
+                '27 September 2024',
+                '380',
+                'Indonesia',
+                'Rp 99.000',
+            ] && ($styles[1]['font']['bold'] ?? false)
+                && $styles['A1:J2']['borders']['allBorders']['borderStyle'] === Border::BORDER_THIN;
+        });
+    }
+
+    public function test_non_admin_cannot_download_excel_exports(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->get(route('admin.books.export'))
+            ->assertRedirect(route('home'));
+
+        $this->get(route('admin.subscription-packages.export'))
+            ->assertRedirect(route('home'));
     }
 
     private function adminUser(): User

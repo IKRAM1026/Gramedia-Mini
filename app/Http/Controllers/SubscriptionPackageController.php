@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\SubscriptionPackagesExport;
 use App\Models\Book;
 use App\Models\SubscriptionPackage;
 use App\Models\SubscriptionPackageUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -53,6 +55,11 @@ class SubscriptionPackageController extends Controller
         }
 
         return view('admin.subscription-packages.index');
+    }
+
+    public function export()
+    {
+        return Excel::download(new SubscriptionPackagesExport, 'subscription_packages.xlsx');
     }
 
     /**

@@ -55,10 +55,12 @@ Route::middleware(['IsAdmin'])->group(function () {
         Route::get('/book-categories/export', [BookCategoryController::class, 'export'])->name('book-categories.export');
         // Route::resource artnya sudah menyediakan semua method yang di perlukan (CRUD)
         Route::resource('book-categories', BookCategoryController::class);
+        Route::get('/subscription-packages/export', [SubscriptionPackageController::class, 'export'])->name('subscription-packages.export');
         Route::resource('subscription-packages', SubscriptionPackageController::class)->except(['show']);
         Route::get('/subscription-packages/{subscriptionPackage}/books', [SubscriptionPackageController::class, 'books'])->name('subscription-packages.books.index');
         Route::get('/subscription-packages/{subscriptionPackage}/books/add', [SubscriptionPackageController::class, 'addBooks'])->name('subscription-packages.books.add');
         Route::post('/subscription-packages/{subscriptionPackage}/books', [SubscriptionPackageController::class, 'attachBooks'])->name('subscription-packages.books.attach');
+        Route::get('/books/export', [BookController::class, 'export'])->name('books.export');
         Route::resource('books', BookController::class);
 
     });
