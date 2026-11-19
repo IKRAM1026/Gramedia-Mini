@@ -104,8 +104,10 @@
                 </div>
 
                 {{-- KERANJANG --}}
-                <div class="ms-2 mt-3">
+                <div class="ms-2 mt-2 ">
+                <a href ="{{ route('carts') }}">
                     <i class="fa fa-shopping-cart"></i>
+                </a>
                 </div>
 
             @endif

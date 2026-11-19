@@ -65,6 +65,9 @@
 @endpush
 
 @section('content')
+<form action="{{  route('carts.store') }}" method="POST">
+    @csrf
+    <input type="hidden" name="book_id" value="{{ $book->id }}">
 <div class="container-xl px-5 py-4 bg-white">
     <div class="row g-4">
         <div class="col-lg-5 col-md-6">
@@ -80,35 +83,37 @@
         <div class="col-lg-7 col-md-6">
             <h1 class="h2 fw-bold text-dark mb-0">{{ $book->title }}</h1>
 
-            <div class="mb-4">
-                <label class="form-label fw-bold text-muted small text-uppercase mb-2">Opsi Pembelian</label>
-                <div class="purchase-options">
-                    @forelse ($book->subscriptionPackageBooks as $subscriptionPackageBook)
-                        @php($subscriptionPackage = $subscriptionPackageBook->subscriptionPackage)
-                        <label class="form-selectgroup-item">
-                            <input type="radio" name="purchase_option"
-                                value="{{ $subscriptionPackageBook->subscription_package_id }}"
-                                class="form-selectgroup-input" {{ $loop->first ? 'checked' : '' }}>
-                            <span class="form-selectgroup-label purchase-option-card d-flex flex-column align-items-start justify-content-start p-3 border rounded">
-                                <span class="text-muted small">{{ $subscriptionPackage->nama_package }}</span>
-                                <span class="h3 fw-bold text-dark mb-0">
-                                    Rp {{ number_format((float) $subscriptionPackage->price, 0, ',', '.') }}
-                                </span>
-                            </span>
-                        </label>
-                    @empty
-                        <label class="form-selectgroup-item">
-                            <input type="radio" name="purchase_option" value="buy" class="form-selectgroup-input" checked>
-                            <span class="form-selectgroup-label purchase-option-card d-flex flex-column align-items-start justify-content-start p-3 border rounded">
-                                <span class="text-muted small">Beli satu buku</span>
-                                <span class="h3 fw-bold text-dark mb-0">
-                                    Rp {{ number_format((float) $book->price, 0, ',', '.') }}
-                                </span>
-                            </span>
-                        </label>
-                    @endforelse
-                </div>
-            </div>
+           <div class="mb-4">
+    <label class="form-label fw-bold text-muted small text-uppercase mb-2">Opsi Pembelian</label>
+    <div class="purchase-options">
+        {{-- 1. Opsi Beli Satuan (Selalu tampil & otomatis terpilih pertama kali) --}}
+        <label class="form-selectgroup-item">
+            <input type="radio" name="purchase_option" value="none" class="form-selectgroup-input" checked>
+            <span class="form-selectgroup-label purchase-option-card d-flex flex-column align-items-start justify-content-start p-3 border rounded">
+                <span class="text-muted small">Satuan</span>
+                <span class="h3 fw-bold text-dark mb-0">
+                    Rp {{ number_format((float) $book->price, 0, ',', '.') }}
+                </span>
+            </span>
+        </label>
+
+        {{-- 2. Opsi Paket Langganan (Tetap di-looping jika bukunya ada di dalam paket) --}}
+        @foreach ($book->subscriptionPackageBooks as $subscriptionPackageBook)
+            @php($subscriptionPackage = $subscriptionPackageBook->subscriptionPackage)
+            <label class="form-selectgroup-item">
+                <input type="radio" name="purchase_option"
+                    value="{{ $subscriptionPackageBook->subscription_package_id }}"
+                    class="form-selectgroup-input">
+                <span class="form-selectgroup-label purchase-option-card d-flex flex-column align-items-start justify-content-start p-3 border rounded">
+                    <span class="text-muted small">{{ $subscriptionPackage->nama_package }}</span>
+                    <span class="h3 fw-bold text-dark mb-0">
+                        Rp {{ number_format((float) $subscriptionPackage->price, 0, ',', '.') }}
+                    </span>
+                </span>
+            </label>
+        @endforeach
+    </div>
+</div>
 
             <div class="card border-0 shadow-sm mb-3">
                 <div class="card-body p-3">
@@ -177,17 +182,18 @@
                 </div>
             </div>
             <div class="d-flex gap-2">
-                @auth
-                    <a href="" class="btn btn-outline-primary px-4 py-2 fw-medium">Tambah ke Keranjang</a>
-                    <a href="{{ route('books.checkout.page', $book) }}" class="btn btn-primary px-4 py-2 fw-medium">Beli Sekarang</a>
-                @else
-                    <a href="" class="btn btn-outline-primary px-4 py-2 fw-medium">Tambah ke Keranjang</a>
-                    <a href="{{ route('login') }}" class="btn btn-primary px-4 py-2 fw-medium">Beli Sekarang</a>
-                @endauth
+
+                {{--hidden : data dari developer bukan pengguna ketika datanya diperlukan controller tapi bukan diisi atau dipilih pengguna--}}
+                <input type="hidden" name="book_id" value="{{ $book->id }}">
+
+                    <button type="submit" name="action" value="add_to_cart" class="btn btn-outline-primary px-4 py-2 fw-medium">Tambah ke Keranjang</button>
+                    <button type="submit" name="action" value="buy_now" class="btn btn-primary px-4 py-2 fw-medium">Beli Sekarang</button>
+               
             </div>
         </div>
     </div>
 </div>
+</form>
 @endsection
 
 @push('scripts')

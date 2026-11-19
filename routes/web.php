@@ -7,6 +7,7 @@ use App\Http\Controllers\SubscriptionPackageController;
 use App\Http\Controllers\Usercontroller;
 use App\Models\SubscriptionPackage;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\CartController;
 
 // Route::get('/', function () {
 //     $subscriptionPackages = SubscriptionPackage::all();
@@ -41,10 +42,16 @@ Route::middleware(['IsGuest'])->group(function () {
 Route::middleware(['IsLoggedIn'])->group(function () {
     Route::get('/logout', [Usercontroller::class, 'logout'])->name('logout');
     Route::get('/akun', [Usercontroller::class, 'account'])->name('account');
+
     Route::get('/paket-langganan/{subscriptionPackage}/checkout', [SubscriptionPackageController::class, 'checkoutPage'])->name('subscription-packages.checkout.page');
     Route::post('/paket-langganan/{subscriptionPackage}/checkout', [SubscriptionPackageController::class, 'checkout'])->name('subscription-packages.checkout');
+    
     Route::get('/buku/{book}/checkout', [HomeController::class, 'bookCheckoutPage'])->name('books.checkout.page');
     Route::post('/buku/{book}/checkout', [HomeController::class, 'bookCheckout'])->name('books.checkout');
+
+    Route::get('/carts', [CartController::class, 'index'])->name('carts');
+    Route::post('/carts/add', [CartController::class, 'store'])->name('carts.store');
+    Route::delete('/carts/{id}', [CartController::class, 'destroy'])->name('carts.destroy');
 });
 
 Route::middleware(['IsAdmin'])->group(function () {
