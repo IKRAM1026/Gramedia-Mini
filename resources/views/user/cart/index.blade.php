@@ -101,7 +101,7 @@
                     <h4 id="total-price-text" class="text-dark mb-0">Rp{{ number_format($totalPrice, 0, ',', '.') }}</h4>
                 </div>
 
-                <form method="POST" action="#">
+                <form method="POST" action="{{ route('checkout.store') }}">
                     @csrf
                     <div id="checkout-inputs"></div>
                     <button type="submit" id="btn-checkout" class="btn btn-primary w-100 py-3 rounded-pill fw-semibold">

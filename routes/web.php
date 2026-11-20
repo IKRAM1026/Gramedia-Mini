@@ -8,6 +8,7 @@ use App\Http\Controllers\Usercontroller;
 use App\Models\SubscriptionPackage;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\CheckoutController;
 
 // Route::get('/', function () {
 //     $subscriptionPackages = SubscriptionPackage::all();
@@ -52,6 +53,7 @@ Route::middleware(['IsLoggedIn'])->group(function () {
     Route::get('/carts', [CartController::class, 'index'])->name('carts');
     Route::post('/carts/add', [CartController::class, 'store'])->name('carts.store');
     Route::delete('/carts/{id}', [CartController::class, 'destroy'])->name('carts.destroy');
+    Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
 });
 
 Route::middleware(['IsAdmin'])->group(function () {
